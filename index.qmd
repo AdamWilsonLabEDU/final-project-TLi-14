@@ -39,7 +39,59 @@ See <http://rmarkdown.rstudio.com/> for all the amazing things you can do.
 Here's my first code chunk.
 
 ```{r}
-x=3+4
+# Load necessary libraries
+# install.packages(c("terra", "geodata"))
+install.packages("geodata")
+
+library(terra)
+library(geodata)
+
+# Step 1: Download elevation data 
+elevation <- worldclim_global(var = "elev", res = 2.5, path = tempdir())
+
+# Check and visualize elevation data
+print(elevation)
+plot(elevation, main = "Global Elevation (2.5min)")
+
+# Step 2: Download monthly climate data 
+
+# Minimum temperature (Tmin)
+tmin <- worldclim_global(var = "tmin", res = 2.5, path = tempdir())
+
+# Mean temperature (Tmean)
+tmean <- worldclim_global(var = "tavg", res = 2.5, path = tempdir())
+
+# Maximum temperature (Tmax)
+tmax <- worldclim_global(var = "tmax", res = 2.5, path = tempdir())
+
+# Precipitation
+precip <- worldclim_global(var = "prec", res = 2.5, path = tempdir())
+
+# Solar radiation
+solar <- worldclim_global(var = "srad", res = 2.5, path = tempdir())
+
+# Wind speed
+wind <- worldclim_global(var = "wind", res = 2.5, path = tempdir())
+
+# Vapor pressure
+vapor <- worldclim_global(var = "vapr", res = 2.5, path = tempdir())
+
+# Step 3: Check and visualize individual climate variables
+print(tmin)
+plot(tmin[[1]], main = "January Minimum Temperature (Tmin)")
+
+print(precip)
+plot(precip[[1]], main = "January Precipitation")
+
+print(solar)
+plot(solar[[1]], main = "January Solar Radiation")
+
+# Step 4: Combine all climate variables and elevation into a single raster stack
+climate_stack <- c(elevation, tmin, tmean, tmax, precip, solar, wind, vapor)
+
+# Check and visualize the combined raster stack
+print(climate_stack)
+plot(climate_stack[[1]], main = "Elevation and Climate Data Stack")
 ```
 
 Refer to output in your narrative like this: x=`r x` .
@@ -47,26 +99,67 @@ Refer to output in your narrative like this: x=`r x` .
 Load any required packages in a code chunk (you may need to install some packages):
 
 ```{r, message=F, warning=F}
-library(tidyverse)
-library(leaflet)
-library(kableExtra)
-library(htmlwidgets)
-library(widgetframe)
-knitr::opts_chunk$set(widgetframe_widgets_dir = 'widgets' ) 
-knitr::opts_chunk$set(cache=TRUE)  # cache the results for quick compiling
+# Load necessary libraries
+# install.packages("rnaturalearth")
+library(terra)
+library(rnaturalearth)
+
+# Load or create the climate and elevation raster stack
+# Assuming climate_stack has already been created
+
+# Step 1: Download global land shapefile
+land <- ne_download(scale = "medium", type = "land", category = "physical", returnclass = "sf")
+
+# Step 2: Crop and mask raster stack to include only land areas
+climate_stack_cropped <- crop(climate_stack, ext(land))  # Crop to land extent
+climate_stack_land <- mask(climate_stack_cropped, vect(land))  # Mask to land areas
+
+# Step 3: Visualize the results
+plot(climate_stack_land[[1]], main = "Cropped and Masked Climate Data (Land Only)")
 ```
 
 ## Download and clean all required data
 
 ```{r}
-n=20
-data=data.frame(x=runif(n,-180,180),
-                y=runif(n,-60,60),
-                size = runif(n, 5, 20),
-                category = factor(
-                  sample(letters[1:5], n, replace = TRUE)
-                  ),
-                value = rnorm(n))
+# Install and load rgbif
+# install.packages("rgbif")
+library(rgbif)
+
+# Define the species name
+species_name <- "Takakia S.Hatt. & Inoue"
+
+# Retrieve occurrence data
+gbif_data <- occ_search(scientificName = species_name, limit = 2000)
+
+# Extract longitude and latitude from the data
+occurrences <- data.frame(
+  lon = gbif_data$data$decimalLongitude,
+  lat = gbif_data$data$decimalLatitude
+)
+
+# Remove rows with missing coordinates
+occurrences_clean <- na.omit(occurrences)
+
+# Remove duplicate coordinates
+occurrences_unique <- occurrences_clean[!duplicated(occurrences_clean), ]
+
+# Check the number of unique points
+cat("Number of unique occurrence points:", nrow(occurrences_unique), "\n")
+
+# Install and load ggplot2
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Plot unique occurrence points
+ggplot() +
+  geom_point(data = occurrences_unique, aes(x = lon, y = lat), color = "red", size = 1) +
+  theme_minimal() +
+  labs(title = "Unique Distribution Points of Takakia S.Hatt. & Inoue",
+       x = "Longitude",
+       y = "Latitude")
+
+# Save the unique occurrence data to a CSV file
+write.csv(occurrences_unique, "Takakia_Unique_Distribution_Data.csv", row.names = FALSE)
 ```
 
 ```{r, results='asis'}
