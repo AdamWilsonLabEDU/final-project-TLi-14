@@ -94,10 +94,6 @@ print(climate_stack)
 plot(climate_stack[[1]], main = "Elevation and Climate Data Stack")
 ```
 
-Refer to output in your narrative like this: x=`r x` .
-
-Load any required packages in a code chunk (you may need to install some packages):
-
 ```{r, message=F, warning=F}
 # Load necessary libraries
 # install.packages("rnaturalearth")
