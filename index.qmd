@@ -36,62 +36,37 @@ You can do numbers like this:
 
 See <http://rmarkdown.rstudio.com/> for all the amazing things you can do.
 
-Here's my first code chunk.
-
-```{r}
-# Load necessary libraries
+1. Setup and Download Environmental data
+```{r setup, include=FALSE}
+# Install and load necessary packages
 # install.packages(c("terra", "geodata"))
-install.packages("geodata")
-
 library(terra)
 library(geodata)
 
-# Step 1: Download elevation data 
-elevation <- worldclim_global(var = "elev", res = 2.5, path = tempdir())
+# Specify the download path
+download_path <- "E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project"
 
-# Check and visualize elevation data
+# Download elevation data (Elevation)
+elevation <- worldclim_global(var = "elev", res = 2.5, path = download_path) 
+
+# Check and visualize the elevation data
 print(elevation)
 plot(elevation, main = "Global Elevation (2.5min)")
 
-# Step 2: Download monthly climate data 
+# Download Bioclimatic variables data
+# WorldClim Bioclimatic variables (typically from bio1 to bio19)
+bioclimatic_vars <- worldclim_global(var = "bio", res = 2.5, path = download_path)  
 
-# Minimum temperature (Tmin)
-tmin <- worldclim_global(var = "tmin", res = 2.5, path = tempdir())
+# Check and visualize Bioclimatic variables data
+print(bioclimatic_vars)
+plot(bioclimatic_vars[[1]], main = "Bio1: Annual Mean Temperature")
 
-# Mean temperature (Tmean)
-tmean <- worldclim_global(var = "tavg", res = 2.5, path = tempdir())
+# Combine the elevation data and Bioclimatic variables into one raster stack
+climate_stack <- c(elevation, bioclimatic_vars)  
 
-# Maximum temperature (Tmax)
-tmax <- worldclim_global(var = "tmax", res = 2.5, path = tempdir())
-
-# Precipitation
-precip <- worldclim_global(var = "prec", res = 2.5, path = tempdir())
-
-# Solar radiation
-solar <- worldclim_global(var = "srad", res = 2.5, path = tempdir())
-
-# Wind speed
-wind <- worldclim_global(var = "wind", res = 2.5, path = tempdir())
-
-# Vapor pressure
-vapor <- worldclim_global(var = "vapr", res = 2.5, path = tempdir())
-
-# Step 3: Check and visualize individual climate variables
-print(tmin)
-plot(tmin[[1]], main = "January Minimum Temperature (Tmin)")
-
-print(precip)
-plot(precip[[1]], main = "January Precipitation")
-
-print(solar)
-plot(solar[[1]], main = "January Solar Radiation")
-
-# Step 4: Combine all climate variables and elevation into a single raster stack
-climate_stack <- c(elevation, tmin, tmean, tmax, precip, solar, wind, vapor)
-
-# Check and visualize the combined raster stack
+# Check and visualize the merged raster stack
 print(climate_stack)
-plot(climate_stack[[1]], main = "Elevation and Climate Data Stack")
+plot(climate_stack[[1]], main = "Elevation and Bioclimatic Variables")
 ```
 
 ```{r, message=F, warning=F}
@@ -114,8 +89,30 @@ climate_stack_land <- mask(climate_stack_cropped, vect(land))  # Mask to land ar
 plot(climate_stack_land[[1]], main = "Cropped and Masked Climate Data (Land Only)")
 ```
 
-## Download and clean all required data
+2. Crop and Mask Raster Stack for Land Areas
+```{r}
 
+# Load necessary libraries
+# install.packages("rnaturalearth")
+library(terra)
+library(rnaturalearth)
+
+# Load or create the climate and elevation raster stack
+# Assuming climate_stack has already been created
+
+# Download global land shapefile
+land <- ne_download(scale = "medium", type = "land", category = "physical", returnclass = "sf")
+
+# Crop and mask raster stack to include only land areas
+climate_stack_cropped <- crop(climate_stack, ext(land))  # Crop to land extent
+climate_stack_land <- mask(climate_stack_cropped, vect(land))  # Mask to land areas
+
+# Visualize the results
+plot(climate_stack_land[[1]], main = "Cropped and Masked Elevation (Land Only)")
+
+```
+
+3. Prepare Takakia Occurrence Data
 ```{r}
 # Install and load rgbif
 # install.packages("rgbif")
@@ -156,14 +153,91 @@ ggplot() +
 
 # Save the unique occurrence data to a CSV file
 write.csv(occurrences_unique, "Takakia_Unique_Distribution_Data.csv", row.names = FALSE)
+
 ```
 
-```{r, results='asis'}
-data %>% 
-  slice(1:10) %>% #show only 1:n rows
-  kable(digits=2,align="c")%>% #make table and round to two digits
-  kable_styling(bootstrap_options = 
-                  c("striped", "hover", "condensed", "responsive")) #apply other formatting
+4. MaxEnt Model for Takakia Distribution Prediction
+```{r}
+# Install required packages (if not already installed)
+# install.packages(c("dismo", "rJava"))
+library(dismo)
+library(terra)
+library(sf)
+library(rJava)
+library(raster)
+
+options(java.parameters = "-Xmx8g")
+
+# Assuming climate_stack_land is prepared and cleaned (using all layers in the stack)
+# No need to subset the layers as we will use all the variables from climate_stack_land
+selected_env_stack <- climate_stack_land
+
+# Ensure occurrences_unique is an sf object with coordinates
+occurrences_sf <- st_as_sf(occurrences_unique, coords = c("lon", "lat"), crs = crs(selected_env_stack))
+
+# Convert SpatRaster to RasterStack (if it's not already in stack format)
+selected_env_stack <- stack(selected_env_stack)
+
+# Extract coordinates from the sf object
+occurrences_matrix <- as.matrix(st_coordinates(occurrences_sf))
+
+# Extract environmental values at occurrence points
+env_values <- extract(selected_env_stack, occurrences_matrix)
+
+# Combine occurrences with extracted environmental data
+occ_with_env <- cbind(occurrences_matrix, env_values)
+
+# Remove rows with NA predictor values
+occ_with_env <- na.omit(occ_with_env)
+
+# Separate cleaned occurrences and predictor values
+occurrences_matrix_clean <- occ_with_env[, 1:2]  # First two columns are longitude and latitude
+
+# Train the MaxEnt model (with all variables)
+maxent_model <- maxent(
+  x = selected_env_stack, 
+  p = occurrences_matrix_clean
+)
+
+# Summary of the model
+summary(maxent_model)
+
+# Predict the current distribution
+current_distribution <- predict(maxent_model, selected_env_stack)
+
+# Visualize the prediction
+plot(current_distribution, main = "Predicted Current Distribution of Takakia")
+
+# Save the predicted distribution as a GeoTIFF file
+writeRaster(current_distribution, filename = "Takakia_Current_Distribution.tif", overwrite = TRUE)
+
+# Split data into training and testing sets
+set.seed(123)
+train_indices <- sample(1:nrow(occurrences_matrix), size = 0.7 * nrow(occurrences_matrix))
+train_data <- occurrences_matrix[train_indices, ]
+test_data <- occurrences_matrix[-train_indices, ]
+
+# Evaluate the model
+eval <- evaluate(maxent_model, p = train_data, a = test_data, x = selected_env_stack)
+print(eval)
+
+# Plot the receiver operating characteristic (ROC) curve
+plot(eval, "ROC")
+
+# Perform Jackknife to evaluate the importance of each environmental variable
+# Use the 'maxent' model with jackknife = TRUE
+jackknife_results <- dismo::maxent(
+  x = selected_env_stack, 
+  p = occurrences_matrix_clean,
+  jackknife = TRUE
+)
+
+# Extract Jackknife results from the 'maxent' object using the appropriate method
+# Jackknife results are contained in the model object itself, accessible by using the 'maxent' method:
+jackknife_importance <- jackknife_results@results
+
+# Display the Jackknife importance values for each variable
+print(jackknife_importance)
 ```
 
 Add any additional processing steps here.
