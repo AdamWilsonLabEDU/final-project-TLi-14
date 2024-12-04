@@ -1,7 +1,7 @@
 ---
 title: "My Final Project Template"
 author: Tianze Li
-subtitle: Subtitle here if desired
+subtitle: Predicting the distribution of an enigmatic genus of moss
 date: today
 date-format: long
 ---
@@ -67,26 +67,6 @@ climate_stack <- c(elevation, bioclimatic_vars)
 # Check and visualize the merged raster stack
 print(climate_stack)
 plot(climate_stack[[1]], main = "Elevation and Bioclimatic Variables")
-```
-
-```{r, message=F, warning=F}
-# Load necessary libraries
-# install.packages("rnaturalearth")
-library(terra)
-library(rnaturalearth)
-
-# Load or create the climate and elevation raster stack
-# Assuming climate_stack has already been created
-
-# Step 1: Download global land shapefile
-land <- ne_download(scale = "medium", type = "land", category = "physical", returnclass = "sf")
-
-# Step 2: Crop and mask raster stack to include only land areas
-climate_stack_cropped <- crop(climate_stack, ext(land))  # Crop to land extent
-climate_stack_land <- mask(climate_stack_cropped, vect(land))  # Mask to land areas
-
-# Step 3: Visualize the results
-plot(climate_stack_land[[1]], main = "Cropped and Masked Climate Data (Land Only)")
 ```
 
 2. Crop and Mask Raster Stack for Land Areas
