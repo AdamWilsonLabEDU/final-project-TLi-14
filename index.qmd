@@ -37,9 +37,10 @@ You can do numbers like this:
 See <http://rmarkdown.rstudio.com/> for all the amazing things you can do.
 
 1. Setup and Download Environmental data
-```{r setup, include=FALSE}
+```{r, include=FALSE, eval=FALSE}
 # Install and load necessary packages
 # install.packages(c("terra", "geodata"))
+library(googledrive)
 library(terra)
 library(geodata)
 
@@ -66,11 +67,11 @@ climate_stack <- c(elevation, bioclimatic_vars)
 
 # Check and visualize the merged raster stack
 print(climate_stack)
-plot(climate_stack[[1]], main = "Elevation and Bioclimatic Variables")
+plot(climate_stack[[1]], main = "Global Elevation")
 ```
 
 2. Crop and Mask Raster Stack for Land Areas
-```{r}
+```{r, include=FALSE, message=FALSE, eval=FALSE}
 
 # Load necessary libraries
 # install.packages("rnaturalearth")
@@ -84,8 +85,8 @@ library(rnaturalearth)
 land <- ne_download(scale = "medium", type = "land", category = "physical", returnclass = "sf")
 
 # Crop and mask raster stack to include only land areas
-climate_stack_cropped <- crop(climate_stack, ext(land))  # Crop to land extent
-climate_stack_land <- mask(climate_stack_cropped, vect(land))  # Mask to land areas
+climate_stack_cropped <- crop(climate_stack, ext(land))
+climate_stack_land <- mask(climate_stack_cropped, vect(land))
 
 # Visualize the results
 plot(climate_stack_land[[1]], main = "Cropped and Masked Elevation (Land Only)")
@@ -93,10 +94,13 @@ plot(climate_stack_land[[1]], main = "Cropped and Masked Elevation (Land Only)")
 ```
 
 3. Prepare Takakia Occurrence Data
-```{r}
-# Install and load rgbif
+```{r, eval=FALSE}
 # install.packages("rgbif")
+# install.packages("rnaturalearthdata")
+
 library(rgbif)
+library(ggplot2)
+library(rnaturalearth)
 
 # Define the species name
 species_name <- "Takakia S.Hatt. & Inoue"
@@ -119,12 +123,12 @@ occurrences_unique <- occurrences_clean[!duplicated(occurrences_clean), ]
 # Check the number of unique points
 cat("Number of unique occurrence points:", nrow(occurrences_unique), "\n")
 
-# Install and load ggplot2
-# install.packages("ggplot2")
-library(ggplot2)
+# Load world map for background
+world_map <- ne_countries(scale = "medium", returnclass = "sf")
 
 # Plot unique occurrence points
 ggplot() +
+  geom_sf(data = world_map, fill = "lightgray", color = "black") +
   geom_point(data = occurrences_unique, aes(x = lon, y = lat), color = "red", size = 1) +
   theme_minimal() +
   labs(title = "Unique Distribution Points of Takakia S.Hatt. & Inoue",
@@ -137,7 +141,7 @@ write.csv(occurrences_unique, "Takakia_Unique_Distribution_Data.csv", row.names 
 ```
 
 4. MaxEnt Model for Takakia Distribution Prediction
-```{r}
+```{r, eval=FALSE}
 # Install required packages (if not already installed)
 # install.packages(c("dismo", "rJava"))
 library(dismo)
@@ -193,7 +197,7 @@ writeRaster(current_distribution, filename = "Takakia_Current_Distribution.tif",
 
 # Split data into training and testing sets
 set.seed(123)
-train_indices <- sample(1:nrow(occurrences_matrix), size = 0.7 * nrow(occurrences_matrix))
+train_indices <- sample(1:nrow(occurrences_matrix), size = 0.75 * nrow(occurrences_matrix))
 train_data <- occurrences_matrix[train_indices, ]
 test_data <- occurrences_matrix[-train_indices, ]
 
@@ -229,27 +233,6 @@ Add any additional processing steps here.
 Tables and figures (maps and other graphics) are carefully planned to convey the results of your analysis. Intense exploration and evidence of many trials and failures. The author looked at the data in many different ways before coming to the final presentation of the data.
 
 Show tables, plots, etc. and describe them.
-
-```{r, fig.width=6, fig.height=3, fig.cap="Map of completely random data"}
-m <- leaflet(data) %>% 
-  addTiles() %>% 
-  addCircleMarkers(~x, ~y, radius = ~size,color = ~as.factor(category)) %>% 
-  addPopups(~x[2], ~y[2], "Random popup")
-m  # a map with the default OSM tile layer
-```
-
-```{r}
-data %>% 
-  ggplot(aes(x=x,y=y,col=category))+
-  geom_point()
-```
-
-### Dygraphs Example
-
-```{r}
-library(dygraphs)
-dygraph(nhtemp, main = "New Haven Temperatures") |> 
-  dyRangeSelector(dateWindow = c("1920-01-01", "1960-01-01")) 
 ```
 
 # Conclusions
