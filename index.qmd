@@ -36,8 +36,9 @@ You can do numbers like this:
 
 See <http://rmarkdown.rstudio.com/> for all the amazing things you can do.
 
-1. Setup and Download Environmental data
-```{r, include=FALSE, eval=FALSE}
+1.  Setup and Download Environmental data
+
+```{r, include=TRUE, eval=FALSE}
 # Install and load necessary packages
 # install.packages(c("terra", "geodata"))
 library(googledrive)
@@ -49,10 +50,6 @@ download_path <- "E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project
 
 # Download elevation data (Elevation)
 elevation <- worldclim_global(var = "elev", res = 2.5, path = download_path) 
-
-# Check and visualize the elevation data
-print(elevation)
-plot(elevation, main = "Global Elevation (2.5min)")
 
 # Download Bioclimatic variables data
 # WorldClim Bioclimatic variables (typically from bio1 to bio19)
@@ -70,8 +67,9 @@ print(climate_stack)
 plot(climate_stack[[1]], main = "Global Elevation")
 ```
 
-2. Crop and Mask Raster Stack for Land Areas
-```{r, include=FALSE, message=FALSE, eval=FALSE}
+2.  Crop and Mask Raster Stack for Land Areas
+
+```{r, include=TRUE, message=FALSE, eval=FALSE}
 
 # Load necessary libraries
 # install.packages("rnaturalearth")
@@ -93,14 +91,14 @@ plot(climate_stack_land[[1]], main = "Cropped and Masked Elevation (Land Only)")
 
 ```
 
-3. Prepare Takakia Occurrence Data
-```{r, eval=FALSE}
+3.  Prepare Takakia Occurrence Data
+```{r, include=TRUE, eval=FALSE}
 # install.packages("rgbif")
 # install.packages("rnaturalearthdata")
 
 library(rgbif)
 library(ggplot2)
-library(rnaturalearth)
+library(rnaturalearthdata)
 
 # Define the species name
 species_name <- "Takakia S.Hatt. & Inoue"
@@ -140,8 +138,9 @@ write.csv(occurrences_unique, "Takakia_Unique_Distribution_Data.csv", row.names 
 
 ```
 
-4. MaxEnt Model for Takakia Distribution Prediction
-```{r, eval=FALSE}
+4.  MaxEnt Model for Takakia Distribution Prediction
+
+```{r, include=TRUE, eval=FALSE}
 # Install required packages (if not already installed)
 # install.packages(c("dismo", "rJava"))
 library(dismo)
@@ -232,8 +231,7 @@ Add any additional processing steps here.
 
 Tables and figures (maps and other graphics) are carefully planned to convey the results of your analysis. Intense exploration and evidence of many trials and failures. The author looked at the data in many different ways before coming to the final presentation of the data.
 
-Show tables, plots, etc. and describe them.
-```
+Show tables, plots, etc. and describe them. \`\`\`
 
 # Conclusions
 
