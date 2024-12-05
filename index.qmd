@@ -5,11 +5,24 @@ subtitle: Predicting the distribution of an enigmatic genus of moss
 date: today
 date-format: long
 ---
+title: "Predicting the Distribution of an Enigmatic Genus of Moss"
+author: Tianze Li
+subtitle: GEO511 Final Project 
+date: today
+date-format: long
+code-fold: true
+code-summary: "Show Me the Script"
+---
 
 # Introduction
 
+Takakia (Figure 1) was discovered in the Himalayas in 1861. It is the oldest known extant genus of land plants, estimated to have branched off the other mosses around 390 million years ago. Takakia has rapidly evolving genes and is highly sensitive to environmental changes, particularly to temperatures during the growing season. Based on 20 years of monitoring Takakia on the Tibetan Plateau, scientists have discovered that due to climate change, including glacier melt and rising annual average temperatures, this species is facing the risk of extinction in the region. This highlights the urgent need for an effective conservation plan for Takakia.
 
-Clearly stated background and questions / hypotheses / problems being addressed. Sets up the analysis in an interesting and compelling way. Include figures if you like.
+However, current research on Takakia focuses on the genetic response of Takakia to environmental changes. There are lack of studies that focus on distribution of Takakia on a global scale. In this project, I aim to address this gap by utilizing data from GBIF and field sampling to map the existing global distribution of Takakia. I will combine this with multi-source environmental data, including WorldClim and weather station records from the experimental area, to predict suitable growing areas for Takakia worldwide.
+
+I hope that the results of the project will provide a reference for the establishment of conservation areas for Takakia in the future and the selection of Ex-situ conservation location.
+
+![Figure 1](Takakia_lepidozioides.jpg)
 
 # Materials and methods
 
@@ -21,28 +34,30 @@ Code: The code associated with the project is well organized and easy to follow.
 
 Data: The underlying data are publicly accessible via the web and downloaded/accessed within the Rmd script. If you want to use your own data, you must make it available on a website (e.g. Figshare) so that others are able to re-run your code.
 
-You can do bullets like this:
+0.  Install and Load Packages
 
--   The first most important thing
--   The second most important thing
--   The third most important thing
+```{r, massage=FALSE}
 
-You can do numbers like this:
-
-1.  The first most important thing
-2.  The second most important thing
-3.  The third most important thing
-
-See <http://rmarkdown.rstudio.com/> for all the amazing things you can do.
+library(terra)
+library(geodata)
+library(rnaturalearth)
+library(rgbif)
+library(ggplot2)
+library(rnaturalearthdata)
+library(dismo)
+library(sf)
+library(rJava)
+library(raster)
+```
 
 1.  Setup and Download Environmental data
 
-```{r, include=TRUE, eval=FALSE}
-# Install and load necessary packages
-# install.packages(c("terra", "geodata"))
-library(googledrive)
-library(terra)
-library(geodata)
+![Global Elevation](elevation_plot.png)
+
+![Bio1: Annual Mean Temperature](bio1_plot.png)
+
+![Bio12: Annual Precipitation](bio12_plot.png)
+```{r, include=TRUE, eval=FALSE, cache = TRUE}
 
 # Specify the download path
 download_path <- "E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project"
@@ -68,15 +83,9 @@ plot(climate_stack[[1]], main = "Global Elevation")
 
 2.  Crop and Mask Raster Stack for Land Areas
 
-```{r, include=TRUE, message=FALSE, eval=FALSE}
+![Annual Precipitation(Land Only)](bio12_plot.png)
 
-# Load necessary libraries
-# install.packages("rnaturalearth")
-library(terra)
-library(rnaturalearth)
-
-# Load or create the climate and elevation raster stack
-# Assuming climate_stack has already been created
+```{r, include=TRUE, message=FALSE, eval=FALSE, cache = TRUE}
 
 # Download global land shapefile
 land <- ne_download(scale = "medium", type = "land", category = "physical", returnclass = "sf")
@@ -86,18 +95,15 @@ climate_stack_cropped <- crop(climate_stack, ext(land))
 climate_stack_land <- mask(climate_stack_cropped, vect(land))
 
 # Visualize the results
-plot(climate_stack_land[[1]], main = "Cropped and Masked Elevation (Land Only)")
+plot(climate_stack_land[[12]], main = "Annual Precipitation(Land Only)")
 
 ```
 
 3.  Prepare Takakia Occurrence Data
-```{r, include=TRUE, eval=FALSE}
-# install.packages("rgbif")
-# install.packages("rnaturalearthdata")
 
-library(rgbif)
-library(ggplot2)
-library(rnaturalearthdata)
+![Occurrences of Takakia](Takakia_Distribution_Plot.png)
+
+```{r, include=TRUE, eval=FALSE, cache = TRUE}
 
 # Define the species name
 species_name <- "Takakia S.Hatt. & Inoue"
@@ -139,19 +145,10 @@ write.csv(occurrences_unique, "Takakia_Unique_Distribution_Data.csv", row.names 
 
 4.  MaxEnt Model for Takakia Distribution Prediction
 
-```{r, include=TRUE, eval=FALSE}
-# Install required packages (if not already installed)
-# install.packages(c("dismo", "rJava"))
-library(dismo)
-library(terra)
-library(sf)
-library(rJava)
-library(raster)
+```{r, include=TRUE, eval=FALSE, cache = TRUE}
 
 options(java.parameters = "-Xmx8g")
 
-# Assuming climate_stack_land is prepared and cleaned (using all layers in the stack)
-# No need to subset the layers as we will use all the variables from climate_stack_land
 selected_env_stack <- climate_stack_land
 
 # Ensure occurrences_unique is an sf object with coordinates
