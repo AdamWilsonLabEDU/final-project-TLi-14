@@ -22,7 +22,7 @@ However, due to *Takakia*'s small size and its primary growth between rocks, it 
 In this project, I aim to address this gap by utilizing global environmental data to predict suitable growing areas for *Takakia* worldwide. I hope that the results of the project will provide a reference for the establishment of conservation areas for *Takakia* in the future and the selection of Ex-situ conservation location.
 
 
-![Figure 1](C:/Users/DELL/Desktop/Takakia_lepidozioides.png)
+![Figure 1](Takakia_lepidozioides.jpg)
 
 # Materials and methods
 
@@ -55,9 +55,9 @@ library(raster)
 
 **1.  Setup and Download Environmental data**
 
-![Global Elevation](E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project/elevation_plot.png)
+![Global Elevation](elevation_plot.png)
 
-![Bio1: Annual Mean Temperature](E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project/bio1_plot.png)
+![Bio1: Annual Mean Temperature](bio1_plot.png)
 
 
 
@@ -87,7 +87,7 @@ plot(climate_stack[[1]], main = "Global Elevation")
 
 **2.  Crop and Mask Raster Stack for Land Areas**
 
-![Bio12: Annual Precipitation](E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project/bio12_plot.png)
+![Bio12: Annual Precipitation](bio12_plot.png)
 
 
 
@@ -107,7 +107,7 @@ plot(climate_stack_land[[12]], main = "Annual Precipitation(Land Only)")
 
 **3.  Prepare Takakia Occurrence Data**
 
-![Occurrences of Takakia](E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project/Takakia_Distribution_Plot.png)
+![Occurrences of Takakia](Takakia_Distribution_Plot.png)
 
 
 
@@ -284,9 +284,9 @@ Mean Temperature of Driest Quarter.                          contribution     0.
 Global Elevation.                                            contribution     0.7306
 
 
-![Predicted Current Distribution of Takakia](E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project/Predicted Current Distribution of Takakia.png)
+![Predicted Current Distribution of Takakia](Predicted Current Distribution of Takakia.png)
 
-![AUC](E:/UB_Master/24fall/GEO511 Spatial/Final_project\Final_Project/ROC.png)
+![AUC](ROC.png)
 
 # Conclusions
 Currently, the model's predictive performance is not ideal. This could be due to overfitting (the model performs well on the training data but poorly on test data), likely caused by the inclusion of too many variables. However, it is evident that temperature, precipitation, and diurnal range are the key environmental factors affecting *Takakia* growth. The next step will be to select appropriate variables and attempt to improve the predictive accuracy. Then, I will use future climate data to predict the areas suitable for *Takakia* growth in the future.
