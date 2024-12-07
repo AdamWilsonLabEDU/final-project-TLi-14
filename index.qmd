@@ -1,49 +1,67 @@
 ---
-title: "My Final Project Template"
+title: "Predicting the Distribution of an Enigmatic Genus of Moss"
 author: Tianze Li
-subtitle: Predicting the distribution of an enigmatic genus of moss
+subtitle: GEO511 Final Project 
 date: today
 date-format: long
+code-fold: true
+code-summary: "Show Me the Script"
+knitr:
+  opts_chunk: 
+    message: false
+    warning: false
+
 ---
 
 # Introduction
 
-\[\~ 200 words\]
+*Takakia* (Figure 1) was discovered in the Himalayas in 1861. It is the oldest known extant genus of land plants, estimated to have branched off the other mosses around 390 million years ago. *Takakia* has rapidly evolving genes and is highly sensitive to environmental changes, particularly to temperatures during the growing season. Based on 20 years of monitoring *Takakia* on the Tibetan Plateau, scientists have discovered that due to climate change, including glacier melt and rising annual average temperatures, this species is facing the risk of extinction in the region. This highlights the urgent need for an effective conservation plan for *Takakia*.
 
-Clearly stated background and questions / hypotheses / problems being addressed. Sets up the analysis in an interesting and compelling way. Include figures if you like.
+However, due to *Takakia*'s small size and its primary growth between rocks, it is difficult to discover. Most research on *Takakia* focuses on the genetic response of *Takakia* to environmental changes. There is lack of studies that focus on distribution of *Takakia* on a global scale.
+
+In this project, I aim to address this gap by utilizing global environmental data to predict suitable growing areas for *Takakia* worldwide. I hope that the results of the project will provide a reference for the establishment of conservation areas for *Takakia* in the future and the selection of Ex-situ conservation location.
+
+
+![Figure 1](C:/Users/DELL/Desktop/Takakia_lepidozioides.png)
 
 # Materials and methods
 
-\[\~ 200 words\]
+## Data / Source
 
-Narrative: Clear narrative description of the data sources and methods. Includes data from at least two sources that were integrated / merged in R.
+| Data / Source                         | Description / Link                                                       |
+|---------------------------------------|--------------------------------------------------------------------------|
+| **World Takakia occurrences record**  | [Global Biodiversity Information Facility(GBIF)](https://www.gbif.org/occurrence/search?taxon_key=3229796)          |
+| **Takakia field samples**             | Field study                                                              |
+| **Historical climate data**           | [19 Bioclimatic variables](https://www.worldclim.org/data/worldclim21.html)        |
+| **Future climate data**               | [19 Bioclimatic variables](https://www.worldclim.org/data/cmip6/cmip6climate.html) |
 
-Code: The code associated with the project is well organized and easy to follow. Demonstrates mastery of R graphics and functions.
+I used the above data to predict the global spatial distribution of *Takakia* using the Maximum Entropy(MaxEnt) method in R. The specific implementation code is as follows:
 
-Data: The underlying data are publicly accessible via the web and downloaded/accessed within the Rmd script. If you want to use your own data, you must make it available on a website (e.g. Figshare) so that others are able to re-run your code.
+0.  Install and Load Packages
 
-You can do bullets like this:
+```{r, massage=FALSE, warning=FALSE}
 
--   The first most important thing
--   The second most important thing
--   The third most important thing
-
-You can do numbers like this:
-
-1.  The first most important thing
-2.  The second most important thing
-3.  The third most important thing
-
-See <http://rmarkdown.rstudio.com/> for all the amazing things you can do.
-
-1.  Setup and Download Environmental data
-
-```{r, include=TRUE, eval=FALSE}
-# Install and load necessary packages
-# install.packages(c("terra", "geodata"))
-library(googledrive)
 library(terra)
 library(geodata)
+library(rnaturalearth)
+library(rgbif)
+library(ggplot2)
+library(rnaturalearthdata)
+library(dismo)
+library(sf)
+library(rJava)
+library(raster)
+```
+
+**1.  Setup and Download Environmental data**
+
+![Global Elevation](E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project/elevation_plot.png)
+
+![Bio1: Annual Mean Temperature](E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project/bio1_plot.png)
+
+
+
+```{r, eval=FALSE, cache = TRUE, message=FALSE, warning=FALSE}
 
 # Specify the download path
 download_path <- "E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project"
@@ -67,17 +85,13 @@ print(climate_stack)
 plot(climate_stack[[1]], main = "Global Elevation")
 ```
 
-2.  Crop and Mask Raster Stack for Land Areas
+**2.  Crop and Mask Raster Stack for Land Areas**
 
-```{r, include=TRUE, message=FALSE, eval=FALSE}
+![Bio12: Annual Precipitation](E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project/bio12_plot.png)
 
-# Load necessary libraries
-# install.packages("rnaturalearth")
-library(terra)
-library(rnaturalearth)
 
-# Load or create the climate and elevation raster stack
-# Assuming climate_stack has already been created
+
+```{r, message=FALSE, eval=FALSE, cache = TRUE}
 
 # Download global land shapefile
 land <- ne_download(scale = "medium", type = "land", category = "physical", returnclass = "sf")
@@ -87,18 +101,17 @@ climate_stack_cropped <- crop(climate_stack, ext(land))
 climate_stack_land <- mask(climate_stack_cropped, vect(land))
 
 # Visualize the results
-plot(climate_stack_land[[1]], main = "Cropped and Masked Elevation (Land Only)")
+plot(climate_stack_land[[12]], main = "Annual Precipitation(Land Only)")
 
 ```
 
-3.  Prepare Takakia Occurrence Data
-```{r, include=TRUE, eval=FALSE}
-# install.packages("rgbif")
-# install.packages("rnaturalearthdata")
+**3.  Prepare Takakia Occurrence Data**
 
-library(rgbif)
-library(ggplot2)
-library(rnaturalearthdata)
+![Occurrences of Takakia](E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project/Takakia_Distribution_Plot.png)
+
+
+
+```{r, eval=FALSE, cache = TRUE, , message=FALSE, warning=FALSE}
 
 # Define the species name
 species_name <- "Takakia S.Hatt. & Inoue"
@@ -138,21 +151,12 @@ write.csv(occurrences_unique, "Takakia_Unique_Distribution_Data.csv", row.names 
 
 ```
 
-4.  MaxEnt Model for Takakia Distribution Prediction
+**4.  MaxEnt Model for Takakia Distribution Prediction**
 
-```{r, include=TRUE, eval=FALSE}
-# Install required packages (if not already installed)
-# install.packages(c("dismo", "rJava"))
-library(dismo)
-library(terra)
-library(sf)
-library(rJava)
-library(raster)
+```{r, eval=FALSE, cache = TRUE, , message=FALSE, warning=FALSE}
 
 options(java.parameters = "-Xmx8g")
 
-# Assuming climate_stack_land is prepared and cleaned (using all layers in the stack)
-# No need to subset the layers as we will use all the variables from climate_stack_land
 selected_env_stack <- climate_stack_land
 
 # Ensure occurrences_unique is an sf object with coordinates
@@ -223,22 +227,84 @@ jackknife_importance <- jackknife_results@results
 print(jackknife_importance)
 ```
 
-Add any additional processing steps here.
-
 # Results
 
-\[\~200 words\]
+**Model Evaluation**
 
-Tables and figures (maps and other graphics) are carefully planned to convey the results of your analysis. Intense exploration and evidence of many trials and failures. The author looked at the data in many different ways before coming to the final presentation of the data.
+X.Training.samples                                                                   158.0000
 
-Show tables, plots, etc. and describe them. \`\`\`
+Regularized.training.gain                                                              2.9615
+
+Unregularized.training.gain                                                            3.1286
+
+Iterations                                                                           500.0000
+
+Training.AUC                                                                           0.9798
+
+X.Background.points                                                                10158.0000
+
+Annual Mean Temperature.                                     contribution    16.2349
+
+Mean Temperature of Warmest Quarter.                         contribution     1.4220
+
+Mean Temperature of Coldest Quarter.                         contribution     0.0000
+
+Annual Precipitation.                                        contribution     2.8552
+
+Precipitation of Wettest Month.                              contribution     5.6789
+
+Precipitation of Driest Month.                               contribution    26.9568
+
+Precipitation Seasonality.                                   contribution     1.5024
+
+Precipitation of Wettest Quarter.                            contribution     0.0479
+
+Precipitation of Driest Quarter.                             contribution     0.8141
+
+Precipitation of Warmest Quarter.                            contribution     1.0436
+
+Precipitation of Coldest Quarter.                            contribution    10.4287
+
+Mean Diurnal Range.                                          contribution    20.0025
+
+Isothermality (BIO2/BIO7) (×100).                            contribution     1.0616
+
+Temperature Seasonality.                                     contribution     2.9947
+
+Max Temperature of Warmest Month.                            contribution     2.6196
+
+Min Temperature of Coldest Month.                            contribution     0.0764
+
+Temperature Annual Range (BIO5-BIO6).                        contribution     5.0906
+
+Mean Temperature of Wettest Quarter.                         contribution     0.2649
+
+Mean Temperature of Driest Quarter.                          contribution     0.1747
+
+Global Elevation.                                            contribution     0.7306
+
+
+![Predicted Current Distribution of Takakia](E:/UB_Master/24fall/GEO511 Spatial/Final_project/Final_Project/Predicted Current Distribution of Takakia.png)
+
+![AUC](E:/UB_Master/24fall/GEO511 Spatial/Final_project\Final_Project/ROC.png)
 
 # Conclusions
+Currently, the model's predictive performance is not ideal. This could be due to overfitting (the model performs well on the training data but poorly on test data), likely caused by the inclusion of too many variables. However, it is evident that temperature, precipitation, and diurnal range are the key environmental factors affecting *Takakia* growth. The next step will be to select appropriate variables and attempt to improve the predictive accuracy. Then, I will use future climate data to predict the areas suitable for *Takakia* growth in the future.
 
-\[\~200 words\]
 
-Clear summary adequately describing the results and putting them in context. Discussion of further questions and ways to continue investigation.
 
 # References
 
-All sources are cited in a consistent manner
+1.Hattori, S., Iwatsuki, Z., Mizutani, M., & Inoue, S. (1974). Speciation of Takakia. The Journal of the Hattori Botanical Laboratory, 38, 115-121.
+
+2.Hu, R., Li, X., Hu, Y., Zhang, R., Lv, Q., Zhang, M., ... & He, Y. (2023). Adaptive evolution of the enigmatic Takakia now facing climate change in Tibet. Cell, 186(17), 3558-3576.
+
+3.Elith, J., & Leathwick, J. R. (2009). Species distribution models: ecological explanation and prediction across space and time. Annual review of ecology, evolution, and systematics, 40(1), 677-697.
+
+4.Takakia. In Wikipedia. Retrieved December 5, 2024, from https://en.wikipedia.org/wiki/Takakia.
+
+
+
+
+
+
