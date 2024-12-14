@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Tianze Li">
-<meta name="dcterms.date" content="2024-12-08">
+<meta name="dcterms.date" content="2024-12-14">
 
 <title>Predicting the Distribution of an Enigmatic Genus of Moss – GEO511_FinalProject</title>
 <style>
@@ -166,7 +166,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">December 8, 2024</p>
+      <p class="date">December 14, 2024</p>
     </div>
   </div>
   
@@ -213,10 +213,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><strong>Historical climate data</strong></td>
 <td><a href="https://www.worldclim.org/data/worldclim21.html">19 Bioclimatic variables</a></td>
-</tr>
-<tr class="even">
-<td><strong>Future climate data</strong></td>
-<td><a href="https://www.worldclim.org/data/cmip6/cmip6climate.html">19 Bioclimatic variables</a></td>
 </tr>
 </tbody>
 </table>
@@ -467,7 +463,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="conclusions" class="level1">
 <h1>Conclusions</h1>
-<p>Currently, the model’s predictive performance is not ideal. This could be due to overfitting (the model performs well on the training data but poorly on test data), likely caused by the inclusion of too many variables. However, it is evident that temperature, precipitation, and diurnal range are the key environmental factors affecting <em>Takakia</em> growth. The next step will be to select appropriate variables and attempt to improve the predictive accuracy. Then, I will use future climate data to predict the areas suitable for <em>Takakia</em> growth in the future.</p>
+<p>My project utilized environmental variables to predict the potential global distribution of <em>Takakia</em>. The results indicated that Annual Mean Temperature, Precipitation of the Driest Month, and Mean Diurnal Range were the most influential environmental variables affecting the distribution of <em>Takakia</em>. However, during the experiment, I noticed that the AUC values of the model’s predictions were not ideal. Despite trying various methods to improve the AUC, the results fluctuated between 0.501 and 0.520 without significant improvement. So far, I am still exploring ways to enhance the model’s predictive accuracy. I suspect that two factors might be limiting the model’s performance:1，The resolution of environmental variables. 2，The correlations among environmental variables. In the future, I will continue working on addressing these two issues and strive to improve the model’s accuracy.</p>
 </section>
 <section id="references" class="level1">
 <h1>References</h1>
